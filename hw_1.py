@@ -14,7 +14,7 @@ class Mesh:
     # self.bc.  array with the indices of boundary  type : np.array dim: (2)
     #           points
 
-    self.p   =
+    self.p   = 
     self.n_p = 
     
     self.s   = 
@@ -56,6 +56,8 @@ class Function:
     return 
 
 
+
+
 def mass_matrix(v_h):
 
   # sparse matrix easy to change sparsity pattern
@@ -76,6 +78,8 @@ def mass_matrix(v_h):
 
 
   return M
+
+
 
 def stiffness_matrix(v_h, sigma):
 
@@ -98,6 +102,8 @@ def stiffness_matrix(v_h, sigma):
 
   return S
 
+
+
 # show differences between Trapezoidal rule and Simpson rule
 def load_vector(v_h, f):
 
@@ -116,6 +122,8 @@ def load_vector(v_h, f):
 
 
   return b
+
+
 
 
 def source_assembler(v_h, f, u_dirichlet):
@@ -154,8 +162,9 @@ def source_assembler(v_h, f, u_dirichlet):
   return b[1:-1]
 
 
-def solve_poisson_dirichelet(v_h, f, sigma, 
-                             u_dirichlet=np.zeros((2)) ):
+
+
+def solve_poisson_dirichelet(v_h, f, sigma, u_dirichlet=np.zeros((2)) ):
   """ function to solbe the Poisson equation with 
   Dirichlet boundary conditions
   input:  v_h         function space
@@ -186,6 +195,8 @@ def solve_poisson_dirichelet(v_h, f, sigma,
   return Function(xi_u, v_h)
 
 
+
+
 def pi_h(v_h, f):
   """interpolation function
     input:  v_h   function space
@@ -197,6 +208,8 @@ def pi_h(v_h, f):
 
 
   return pi_h_f
+
+
 
 
 def p_h(v_h, f):
