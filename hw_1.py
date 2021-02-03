@@ -6,30 +6,32 @@ import scipy.integrate as integrate
 
 class Mesh:
   def __init__(self, points):
-    # self.p    array with the node points (sorted) type : np.array dim: (n_p)
     # self.n_p  number of node points               type : int
+    # self.p    array with the node points (sorted) type : np.array dim: (n_p)
+    # self.n_s  number of segments                  type : int
     # self.s    array with indices of points per    type : np.array dim: (n_s, 2) 
     #           segment  
-    # self.n_s  number of segments                  type : int
     # self.bc.  array with the indices of boundary  type : np.array dim: (2)
     #           points
 
-    self.p   = 
-    self.n_p = 
-    
-    self.s   = 
-    self.n_s = 
-    
-    self.bc  = 
+    self.n_p = np.shape(points)[0]
+    self.p   = np.sort(points)
 
+    self.n_s = np.shape(points)[0]-1
+    self.s   = np.transpose(np.array([self.p.tolist()[:-1],self.p.tolist()[1:]]))
+
+    self.bc  = np.array([self.p[0],self.p[-1]])
+
+
+#myMesh = Mesh(np.array([0,.5,.75, .25, 1]))
 
 class V_h:
   def __init__(self, mesh):
     # self.mesh Mesh object containg geometric info type: Mesh
     # self.sim  dimension of the space              type: in
 
-    self.mesh = 
-    self.dim  = 
+    self.mesh = 0
+    self.dim  = 0
 
   def eval(self, xi, x):
     """ evaluation of the piece wise local polynomial given by
@@ -40,21 +42,22 @@ class V_h:
 
 
     # compute the size of the interval
+    
 
-
-    return # here return the value of the fucnciton 
+    #return # here return the value of the fucnciton 
+    pass
 
 class Function:
   def __init__(self, xi, v_h):
-    self.xi  = 
-    self.v_h = 
+    self.xi  = 0
+    self.v_h = 0
 
   def __call__(self,x):
     # wrapper for calling eval in V_h
     
     # use the fucntion defined in v_h
-    return 
-
+    #return 
+    pass
 
 
 
@@ -66,7 +69,7 @@ def mass_matrix(v_h):
   M = spsp.lil_matrix((v_h.dim,v_h.dim))
 
   # for loop
-  for i in range(v_h.mesh.n_s):
+  #for i in range(v_h.mesh.n_s):
     # extract the indices
 
 
@@ -77,7 +80,7 @@ def mass_matrix(v_h):
 
 
 
-  return M
+  #return M
 
 
 
@@ -87,7 +90,7 @@ def stiffness_matrix(v_h, sigma):
   S = spsp.lil_matrix((v_h.dim,v_h.dim))
 
   # for loop
-  for i in range(v_h.mesh.n_s):
+  #for i in range(v_h.mesh.n_s):
     # extract the indices
 
 
@@ -100,7 +103,7 @@ def stiffness_matrix(v_h, sigma):
     # update the stiffness matrix
  
 
-  return S
+  #return S
 
 
 
@@ -111,7 +114,7 @@ def load_vector(v_h, f):
   b = np.zeros(v_h.dim)
 
   # for loop over the segments
-  for i in range(v_h.mesh.n_s):
+  #for i in range(v_h.mesh.n_s):
     # extracting the indices
 
 
@@ -121,14 +124,14 @@ def load_vector(v_h, f):
     # update b
 
 
-  return b
+  #return b
 
 
 
 
 def source_assembler(v_h, f, u_dirichlet):
   # computing the load vector (use the function above)
-
+    pass
 
   # extract the interval index for left boundary
 
@@ -159,80 +162,81 @@ def source_assembler(v_h, f, u_dirichlet):
 
 
   # return only the interior nodes
-  return b[1:-1]
+  #return b[1:-1]
 
 
 
 
-def solve_poisson_dirichelet(v_h, f, sigma, u_dirichlet=np.zeros((2)) ):
-  """ function to solbe the Poisson equation with 
-  Dirichlet boundary conditions
-  input:  v_h         function space
-          f           load (python function)
-          sigma       conductivity
-          u_dirichlet boundary conditions
-  output: u           approximation (Function class)
-  """  
+#def solve_poisson_dirichelet(v_h, f, sigma, u_dirichlet=np.zeros((2)) ):
+#    pass
+    """ function to solbe the Poisson equation with 
+    Dirichlet boundary conditions
+    input:  v_h         function space
+            f           load (python function)
+            sigma       conductivity
+            u_dirichlet boundary conditions
+    output: u           approximation (Function class)
+    """  
+    # we compute the stiffness matrix, we only use the  
+    # the interior dof, and we need to convert it to 
+    # a csc_matrix
+    #S = 
+    
+    # we build the source
+    #b = 
 
-  # we compute the stiffness matrix, we only use the  
-  # the interior dof, and we need to convert it to 
-  # a csc_matrix
-  S = 
-  
-  # we build the source
-  b = 
+    # solve for the interior degrees of freedom
+    #u_interior = spsolve(S,b)
 
-  # solve for the interior degrees of freedom
-  u_interior = spsolve(S,b)
+    # concatenate the solution to add the boundary 
+    # conditions
+    #xi_u = np.concatenate([u_dirichlet[:1], 
+    #                       u_interior, 
+    #                       u_dirichlet[1:]])
 
-  # concatenate the solution to add the boundary 
-  # conditions
-  xi_u = np.concatenate([u_dirichlet[:1], 
-                         u_interior, 
-                         u_dirichlet[1:]])
-
-  # return the function
-  return Function(xi_u, v_h)
+    # return the function
+    #return Function(xi_u, v_h)
 
 
 
 
 def pi_h(v_h, f):
-  """interpolation function
-    input:  v_h   function space
-            f     function to project
-    output: pih_f function that is the interpolation 
-                  of f into v_h
-  """
-  pi_h_f = 
+    """interpolation function
+        input:  v_h   function space
+                f     function to project
+        output: pih_f function that is the interpolation 
+                    of f into v_h
+    """
+    #pi_h_f = 
+    pass
 
-
-  return pi_h_f
+#  return pi_h_f
 
 
 
 
 def p_h(v_h, f):
-  """projection function
-    input:  v_h   function space
-            f     function to project
-    output: ph_f  function that is the projection 
-                  of f into v_h
-  """
-  # compute load vector
-  b = 
+    pass
+    """projection function
+        input:  v_h   function space
+                f     function to project
+        output: ph_f  function that is the projection 
+                    of f into v_h
+    """
+    # compute load vector
+    #b = 
 
-  # compute Mass matrix and convert it to csc type
-  M = 
+    # compute Mass matrix and convert it to csc type
+    #M = 
 
-  # solve the system
-  xi = spsolve(M,b)
+    # solve the system
+    #xi = spsolve(M,b)
 
-  # create the new function (this needs to be an instance)
-  # of a Function class
-  ph_f = 
+    # create the new function (this needs to be an instance)
+    # of a Function class
+    #ph_f = 
 
-  return ph_f
+    #return ph_f
 
 
 
@@ -245,54 +249,54 @@ if __name__ == "__main__":
 
   x = np.linspace(0,1,11)
 
-  mesh = Mesh(x)
-  v_h  = V_h(mesh)
+  #mesh = Mesh(x)
+  #v_h  = V_h(mesh)
 
   
-  f_load = lambda x: 2+0*x
-  xi = f_load(x) # linear function
+  #f_load = lambda x: 2+0*x
+  #xi = f_load(x) # linear function
 
-  u = Function(xi, v_h) 
+  #u = Function(xi, v_h) 
 
-  assert np.abs(u(x[5]) - f_load(x[5])) < 1.e-6
+  #assert np.abs(u(x[5]) - f_load(x[5])) < 1.e-6
 
   # check if this is projection
-  ph_f = p_h(v_h, f_load)
-  ph_f2 = p_h(v_h, ph_f)
+  #ph_f = p_h(v_h, f_load)
+  #ph_f2 = p_h(v_h, ph_f)
 
   # 
-  assert np.max(ph_f.xi - ph_f2.xi) < 1.e-6
+  #assert np.max(ph_f.xi - ph_f2.xi) < 1.e-6
 
   # using analytical solution
-  u = lambda x : np.sin(4*np.pi*x)
+  #u = lambda x : np.sin(4*np.pi*x)
   # building the correct source file
-  f = lambda x : (4*np.pi)**2*np.sin(4*np.pi*x)
+  #f = lambda x : (4*np.pi)**2*np.sin(4*np.pi*x)
   # conductivity is constant
-  sigma = lambda x : 1 + 0*x  
+  #sigma = lambda x : 1 + 0*x  
 
-  u_sol = solve_poisson_dirichelet(v_h, f, sigma)
+  #u_sol = solve_poisson_dirichelet(v_h, f, sigma)
 
-  err = lambda x: np.square(u_sol(x) - u(x))
+  #err = lambda x: np.square(u_sol(x) - u(x))
   # we use an fearly accurate quadrature 
-  l2_err = np.sqrt(integrate.quad(err, 0.0,1.)[0])
+  #l2_err = np.sqrt(integrate.quad(err, 0.0,1.)[0])
 
-  print("L^2 error using %d points is %.6f"% (v_h.dim, l2_err))
+  #print("L^2 error using %d points is %.6f"% (v_h.dim, l2_err))
   # this should be quite large
 
   # define a finer partition 
-  x = np.linspace(0,1,21)
+  #x = np.linspace(0,1,21)
   # init mesh and fucntion space
-  mesh = Mesh(x)
-  v_h  = V_h(mesh)
+  #mesh = Mesh(x)
+  #v_h  = V_h(mesh)
 
-  u_sol = solve_poisson_dirichelet(v_h, f, sigma)
+  #u_sol = solve_poisson_dirichelet(v_h, f, sigma)
 
-  err = lambda x: np.square(u_sol(x) - u(x))
+  #err = lambda x: np.square(u_sol(x) - u(x))
   # we use an fearly accurate quadrature 
-  l2_err = np.sqrt(integrate.quad(err, 0.0,1.)[0])
+  #l2_err = np.sqrt(integrate.quad(err, 0.0,1.)[0])
 
   # print the error
-  print("L^2 error using %d points is %.6f"% (v_h.dim, l2_err))
+  #print("L^2 error using %d points is %.6f"% (v_h.dim, l2_err))
 
 
 
