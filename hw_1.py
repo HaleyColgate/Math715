@@ -23,15 +23,15 @@ class Mesh:
     self.bc  = np.array([self.p[0],self.p[-1]])
 
 
-#myMesh = Mesh(np.array([0,.5,.75, .25, 1]))
+myMesh = Mesh(np.array([0,.55,.75, .25, .8]))
 
 class V_h:
   def __init__(self, mesh):
     # self.mesh Mesh object containg geometric info type: Mesh
-    # self.sim  dimension of the space              type: in
+    # self.dim  dimension of the space              type: int
 
-    self.mesh = 0
-    self.dim  = 0
+    self.mesh = mesh
+    self.dim  = self.mesh.n_s+1
 
   def eval(self, xi, x):
     """ evaluation of the piece wise local polynomial given by
@@ -39,13 +39,18 @@ class V_h:
     """
 
     # compute the index of the interval in which x is contained
-
-
-    # compute the size of the interval
+    for i in range(self.mesh.n_s):
+        if x >= self.mesh.p[i]:
+            xIndex = i + 1
     
+    # compute the size of the interval
+    intervalSize = self.mesh.s[xIndex-1][1] - self.mesh.s[xIndex-1][0] 
 
-    #return # here return the value of the fucnciton 
-    pass
+    # here return the value of the function 
+    return xi[xIndex-1]*(self.mesh.s[xIndex-1][1]-x)/intervalSize + xi[xIndex]*(x-self.mesh.s[xIndex-1][0])/intervalSize
+
+#functionSpace = V_h(myMesh)
+#print(functionSpace.eval([1,2,3,4,5], 0))
 
 class Function:
   def __init__(self, xi, v_h):
