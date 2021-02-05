@@ -64,31 +64,32 @@ class Function:
     return self.v_h.eval(self.xi, x)
 
 function1 = Function([1,2,3,4,5], functionSpace)
-print(function1(.8))
 
 
 def mass_matrix(v_h):
 
-  # sparse matrix easy to change sparsity pattern
-  # this initializes an empty sparse matrix of 
-  # size v_h.dim x v_h.dim
-  M = spsp.lil_matrix((v_h.dim,v_h.dim))
+    # sparse matrix easy to change sparsity pattern
+    # this initializes an empty sparse matrix of 
+    # size v_h.dim x v_h.dim
+    M = spsp.lil_matrix((v_h.dim,v_h.dim))
+    print(M.todense())
 
-  # for loop
-  #for i in range(v_h.mesh.n_s):
-    # extract the indices
+    #for loop
+    for i in range(v_h.mesh.n_s):
+        # extract the indices
+        x1 = v_h.mesh.s[i][0]
+        x2 = v_h.mesh.s[i][1]
 
+        # compute the lengh of the segment
+        h = x2-x1
 
-    # compute the lengh of the segment
+        # add the values to the matrix
+        subM = np.array([[h/3, h/6],[h/6, h/3]])
+        print(subM)
+        M[i:i+2, [i, i+1]] += subM
+    return M
 
-
-    # add the values to the matrix
-
-
-
-  #return M
-
-
+#print(mass_matrix(functionSpace).todense())
 
 def stiffness_matrix(v_h, sigma):
 
