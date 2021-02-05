@@ -49,21 +49,22 @@ class V_h:
     # here return the value of the function 
     return xi[xIndex-1]*(self.mesh.s[xIndex-1][1]-x)/intervalSize + xi[xIndex]*(x-self.mesh.s[xIndex-1][0])/intervalSize
 
-#functionSpace = V_h(myMesh)
+functionSpace = V_h(myMesh)
 #print(functionSpace.eval([1,2,3,4,5], 0))
 
 class Function:
   def __init__(self, xi, v_h):
-    self.xi  = 0
-    self.v_h = 0
+    self.xi  = xi
+    self.v_h = v_h
 
   def __call__(self,x):
     # wrapper for calling eval in V_h
     
-    # use the fucntion defined in v_h
-    #return 
-    pass
+    # use the function defined in v_h
+    return self.v_h.eval(self.xi, x)
 
+function1 = Function([1,2,3,4,5], functionSpace)
+print(function1(.8))
 
 
 def mass_matrix(v_h):
