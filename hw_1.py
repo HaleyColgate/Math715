@@ -92,47 +92,48 @@ def mass_matrix(v_h):
 #print(mass_matrix(functionSpace).todense())
 
 def stiffness_matrix(v_h, sigma):
+    pass
+    # matrix easy to change sparsity pattern
+    S = spsp.lil_matrix((v_h.dim,v_h.dim))
 
-  # matrix easy to change sparsity pattern
-  S = spsp.lil_matrix((v_h.dim,v_h.dim))
+    # for loop
+    #for i in range(v_h.mesh.n_s):
+        # extract the indices
 
-  # for loop
-  #for i in range(v_h.mesh.n_s):
-    # extract the indices
+        # compute the length of the segments
 
-
-    # compute the lengh of the segment
-
-
-    # sample sigma
+        # sample sigma
 
 
-    # update the stiffness matrix
- 
+        # update the stiffness matrix
+    
 
-  #return S
+    #return S
 
 
 
 # show differences between Trapezoidal rule and Simpson rule
 def load_vector(v_h, f):
+    # allocate the vector
+    b = np.zeros(v_h.dim)
+    # for loop over the segments
+    for i in range(v_h.mesh.n_s):
+        # extracting the indices and
+        x1 = v_h.mesh.s[i][0]
+        x2 = v_h.mesh.s[i][1]
+        m = (x1+x2)/2
+            
+        # computing the length of the interval 
+        h = x2-x1
 
-  # allocate the vector
-  b = np.zeros(v_h.dim)
+        # update b
+        b[i:(i+2)] += np.array([h/6*f(x1)+h/3*f(m),h/6*f(x2)+h/3*f(m)])
+    return b
 
-  # for loop over the segments
-  #for i in range(v_h.mesh.n_s):
-    # extracting the indices
+#def f(x):
+#    return x
 
-
-    # computing the lenght of the interval 
-
-
-    # update b
-
-
-  #return b
-
+#print(load_vector(functionSpace, f))
 
 
 
