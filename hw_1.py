@@ -72,7 +72,6 @@ def mass_matrix(v_h):
     # this initializes an empty sparse matrix of 
     # size v_h.dim x v_h.dim
     M = spsp.lil_matrix((v_h.dim,v_h.dim))
-    print(M.todense())
 
     #for loop
     for i in range(v_h.mesh.n_s):
@@ -85,31 +84,32 @@ def mass_matrix(v_h):
 
         # add the values to the matrix
         subM = np.array([[h/3, h/6],[h/6, h/3]])
-        print(subM)
         M[i:i+2, [i, i+1]] += subM
     return M
 
 #print(mass_matrix(functionSpace).todense())
 
 def stiffness_matrix(v_h, sigma):
-    pass
     # matrix easy to change sparsity pattern
     S = spsp.lil_matrix((v_h.dim,v_h.dim))
 
     # for loop
-    #for i in range(v_h.mesh.n_s):
+    for i in range(v_h.mesh.n_s):
         # extract the indices
-
+        x1 = v_h.mesh.s[i][0]
+        x2 = v_h.mesh.s[i][1]
+        
         # compute the length of the segments
+        h = x2-x1
 
         # sample sigma
-
+        a = sigma((x1+x2)/2)
 
         # update the stiffness matrix
-    
+        subS = np.array([[a/h, -a/h],[-a/h, h]])
+        S[i:i+2, [i, i+1]] += subS
 
-    #return S
-
+    return S
 
 
 # show differences between Trapezoidal rule and Simpson rule
@@ -130,8 +130,8 @@ def load_vector(v_h, f):
         b[i:(i+2)] += np.array([h/6*f(x1)+h/3*f(m),h/6*f(x2)+h/3*f(m)])
     return b
 
-#def f(x):
-#    return x
+def f(x):
+    return x
 
 #print(load_vector(functionSpace, f))
 
@@ -224,7 +224,6 @@ def pi_h(v_h, f):
 
 
 def p_h(v_h, f):
-    pass
     """projection function
         input:  v_h   function space
                 f     function to project
@@ -232,21 +231,21 @@ def p_h(v_h, f):
                     of f into v_h
     """
     # compute load vector
-    #b = 
+    b = load_vector(v_h, f)
 
     # compute Mass matrix and convert it to csc type
-    #M = 
+    M = spsp.csc_matrix(mass_matrix(v_h))
 
     # solve the system
-    #xi = spsolve(M,b)
+    xi = spsolve(M,b)
 
     # create the new function (this needs to be an instance)
     # of a Function class
-    #ph_f = 
+    ph_f = Function(xi, v_h)
 
-    #return ph_f
+    return ph_f
 
-
+print(p_h(functionSpace,f)(0))
 
 if __name__ == "__main__":
 
