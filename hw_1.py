@@ -98,7 +98,7 @@ def stiffness_matrix(v_h, sigma):
         a = sigma((x1+x2)/2)
 
         # update the stiffness matrix
-        subS = np.array([[a/h, -a/h],[-a/h, h]])
+        subS = np.array([[a/h, -a/h],[-a/h, a/h]])
         S[i:i+2, [i, i+1]] += subS
 
     return S
@@ -141,7 +141,7 @@ def source_assembler(v_h, f, sigma, u_dirichlet):
     lsigma = sigma(mL)
 
   # update the source_vector
-    b[0] += lsigma / hL * u_dirichlet[0]
+    b[0] += u_dirichlet[0] * lsigma / hL
 
 
   # extract the interval index for the right boudanry
@@ -156,7 +156,7 @@ def source_assembler(v_h, f, sigma, u_dirichlet):
     rsigma = sigma(hR)
 
   # update the source_vector
-    b[-1] += rsigma / hR * u_dirichlet[1]
+    b[-1] += u_dirichlet[0] * rsigma / hR
 
   # return only the interior nodes
     return b[1:-1]
@@ -286,7 +286,7 @@ if __name__ == "__main__":
 
   err = lambda x: np.square(u_sol(x) - u(x))
   # we use an fearly accurate quadrature 
-  l2_err = np.sqrt(integrate.quad(err, 0.0,1., limit = 100)[0])
+  l2_err = np.sqrt(integrate.quad(err, 0.0,1., limit = 500)[0])
 
   # print the error
   print("L^2 error using %d points is %.6f"% (v_h.dim, l2_err))
