@@ -4,6 +4,11 @@ import scipy.sparse as spsp
 from scipy.sparse.linalg import spsolve
 import scipy.integrate as integrate
 
+import matplotlib
+from matplotlib import pyplot as plt
+import pandas as pd
+from pandas import Series, DataFrame
+
 class Mesh:
   def __init__(self, points):
     # self.n_p  number of node points               type : int
@@ -293,6 +298,78 @@ if __name__ == "__main__":
 
 
 
+#B part 1
+def showHconvergence(numSteps):
+    hvals = []
+    errs = []
+    for step in numSteps:
+        hvals.append(np.log(1/(step-1)))
+        x = np.linspace(0,1,step)
+        mesh = Mesh(x)
+        v_h  = V_h(mesh)
+        f_load = lambda x: 2+0*x
+        xi = f_load(x) # linear function
+        u = Function(xi, v_h) 
+        assert np.abs(u(x[5]) - f_load(x[5])) < 1.e-6
+        # check if this is projection
+        ph_f = p_h(v_h, f_load)
+        ph_f2 = p_h(v_h, ph_f)
+        assert np.max(ph_f.xi - ph_f2.xi) < 1.e-6
+        # using analytical solution
+        u = lambda x : np.sin(4*np.pi*x)
+        # building the correct source file
+        f = lambda x : (4*np.pi)**2*np.sin(4*np.pi*x)
+        # conductivity is constant
+        sigma = lambda x : 1 + 0*x  
+        u_sol = solve_poisson_dirichelet(v_h, f, sigma)
+        err = lambda x: np.square(u_sol(x) - u(x))
+        # we use an fearly accurate quadrature 
+        errs.append(np.log(integrate.quad(err, 0.0,1., limit = 500)[0]))
+    errSeries = Series(errs, hvals)
+    ax = errSeries.plot()
+    ax.set_title("Mesh Size vs L2 Error")
+    ax.set_ylabel("Log of Squared L2 Error")
+    ax.set_xlabel("Log of Mesh Size")
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+    plt.savefig('ProblemB_hGraph.png', bbox_inches='tight')
+    
+#numSteps = range(6, 101, 1)
+#showHconvergence(numSteps)
 
-
-
+#B part 2
+def showDoubleDerivative_convergence(kVals):
+    doubleDeriv = []
+    errs = []
+    step = 51
+    for k in kVals:
+        doubleDeriv.append(8*k^4-4*k^3*np.sin(2*k)*np.cos(2*k))
+        x = np.linspace(0,1,step)
+        mesh = Mesh(x)
+        v_h  = V_h(mesh)
+        f_load = lambda x: np.sin(2*k*x)
+        xi = f_load(x) # linear function
+        u = Function(xi, v_h) 
+        assert np.abs(u(x[5]) - f_load(x[5])) < 1.e-6
+        # check if this is projection
+        ph_f = p_h(v_h, f_load)
+        ph_f2 = p_h(v_h, ph_f)
+        assert np.max(ph_f.xi - ph_f2.xi) < 1.e-6
+        # using analytical solution
+        u = lambda x : np.sin(4*np.pi*x) ###########need to fix this
+        # building the correct source file
+        f = lambda x : (4*np.pi)**2*np.sin(4*np.pi*x)
+        # conductivity is constant
+        sigma = lambda x : 1 + 0*x  
+        u_sol = solve_poisson_dirichelet(v_h, f, sigma)
+        err = lambda x: np.square(u_sol(x) - u(x))
+        # we use an fearly accurate quadrature 
+        errs.append(np.log(integrate.quad(err, 0.0,1., limit = 500)[0]))
+    errSeries = Series(errs, kVals)
+    ax = errSeries.plot()
+    ax.set_title("Squared L2 Norm of the Second Derivative vs Squared L2 Error")
+    ax.set_ylabel("Log of Squared L2 Error")
+    ax.set_xlabel("Log of Squared L2 Norm of Second Derivative")
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+    plt.savefig('ProblemB_hGraph.png', bbox_inches='tight')
