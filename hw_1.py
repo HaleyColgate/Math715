@@ -307,14 +307,6 @@ def showHconvergence(numSteps):
         x = np.linspace(0,1,step)
         mesh = Mesh(x)
         v_h  = V_h(mesh)
-        f_load = lambda x: 2+0*x
-        xi = f_load(x) # linear function
-        u = Function(xi, v_h) 
-        assert np.abs(u(x[5]) - f_load(x[5])) < 1.e-6
-        # check if this is projection
-        ph_f = p_h(v_h, f_load)
-        ph_f2 = p_h(v_h, ph_f)
-        assert np.max(ph_f.xi - ph_f2.xi) < 1.e-6
         # using analytical solution
         u = lambda x : np.sin(4*np.pi*x)
         # building the correct source file
@@ -343,33 +335,31 @@ def showDoubleDerivative_convergence(kVals):
     errs = []
     step = 51
     for k in kVals:
-        doubleDeriv.append(8*k^4-4*k^3*np.sin(2*k)*np.cos(2*k))
+        k = k/100
+        l2norm = 8*k**4-4*k**3*np.sin(2*k)*np.cos(2*k)
+        doubleDeriv.append(np.sqrt(l2norm))
         x = np.linspace(0,1,step)
         mesh = Mesh(x)
         v_h  = V_h(mesh)
-        f_load = lambda x: np.sin(2*k*x)
-        xi = f_load(x) # linear function
-        u = Function(xi, v_h) 
-        assert np.abs(u(x[5]) - f_load(x[5])) < 1.e-6
-        # check if this is projection
-        ph_f = p_h(v_h, f_load)
-        ph_f2 = p_h(v_h, ph_f)
-        assert np.max(ph_f.xi - ph_f2.xi) < 1.e-6
         # using analytical solution
-        u = lambda x : np.sin(4*np.pi*x) ###########need to fix this
+        u = lambda x : (np.sin(2*k*x)-x*np.sin(2*k))/(4*k**2)
         # building the correct source file
-        f = lambda x : (4*np.pi)**2*np.sin(4*np.pi*x)
+        f = lambda x : np.sin(2*k*x)
         # conductivity is constant
         sigma = lambda x : 1 + 0*x  
         u_sol = solve_poisson_dirichelet(v_h, f, sigma)
         err = lambda x: np.square(u_sol(x) - u(x))
         # we use an fearly accurate quadrature 
-        errs.append(np.log(integrate.quad(err, 0.0,1., limit = 500)[0]))
-    errSeries = Series(errs, kVals)
+        errs.append(np.sqrt(integrate.quad(err, 0.0,1., limit = 500)[0]))
+    errSeries = Series(errs, doubleDeriv)
     ax = errSeries.plot()
-    ax.set_title("Squared L2 Norm of the Second Derivative vs Squared L2 Error")
-    ax.set_ylabel("Log of Squared L2 Error")
-    ax.set_xlabel("Log of Squared L2 Norm of Second Derivative")
+    ax.set_title("L2 Norm of the Second Derivative vs L2 Error")
+    ax.set_ylabel("L2 Error")
+    ax.set_xlabel("L2 Norm of Second Derivative")
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
-    plt.savefig('ProblemB_hGraph.png', bbox_inches='tight')
+    plt.savefig('ProblemB_fGraph.png')
+
+
+#kVals = range(1, 100)
+#showDoubleDerivative_convergence(kVals)
