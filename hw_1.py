@@ -270,13 +270,13 @@ def refine_grid(tolerance, f, low, high, alpha):
         x = Mesh(xNew)
     return x, error
     
-alpha = .5
-newMesh, error = refine_grid(.001, f, 0, 1, alpha)
-print(newMesh.p, error, len(newMesh.p), 'alpha:', alpha)
+#alpha = .5
+#newMesh, error = refine_grid(.001, f, 0, 1, alpha)
+#print(newMesh.p, error, len(newMesh.p), 'alpha:', alpha)
 
-alpha = 0
-newMesh, error = refine_grid(.001, f, 0, 1, alpha)
-print(newMesh.p, error, len(newMesh.p), 'alpha:', alpha)
+#alpha = 0
+#newMesh, error = refine_grid(.001, f, 0, 1, alpha)
+#print(newMesh.p, error, len(newMesh.p), 'alpha:', alpha)
 
 
 
@@ -362,7 +362,7 @@ def showHconvergence(numSteps):
     ax.spines["right"].set_visible(False)
     plt.savefig('ProblemB_hGraph.png', bbox_inches='tight')
     
-numSteps = range(6, 101, 1)
+#numSteps = range(6, 101, 1)
 #showHconvergence(numSteps)
 
 #B part 3
@@ -419,3 +419,50 @@ def showDoubleDerivative_convergence(kVals):
 
 #kVals = range(1, 100)
 #showDoubleDerivative_convergence(kVals)
+
+
+#c(a)
+def derivConvergence(numSteps):
+    hvals = []
+    errs = []
+    sigma = lambda x : 1 + 0*x  
+    u_dirichlet = np.zeros((2))
+    for step in numSteps:
+        hvals.append(np.log(np.pi/(step-1)))
+        x = np.linspace(0, np.pi, step)
+        mesh = Mesh(x)
+        v_h  = V_h(mesh)
+        # using analytical solution
+        u = lambda x : np.cos(x)
+        # building the correct source file
+        f = lambda x : np.sin(x)
+        # conductivity is constant
+        S = spsp.csc_matrix(stiffness_matrix(v_h, sigma))[1:-1,1:-1]
+        # we build the source
+        b = source_assembler(v_h, f, sigma, u_dirichlet)
+        # solve for the interior degrees of freedom
+        u_interior = spsolve(S,b)
+        # concatenate the solution to add the boundary 
+        # conditions
+        xi_u = np.concatenate([u_dirichlet[:1], u_interior, u_dirichlet[1:]])
+        err = 0
+        for i in range(v_h.mesh.n_s):
+            lower = v_h.mesh.s[i][0] 
+            upper = v_h.mesh.s[i][1]
+            xiLower = xi_u[i]
+            xiUpper = xi_u[i+1]
+            derivFunction = lambda x : np.square(u(x) + xiLower - xiUpper)
+            # we use an fearly accurate quadrature 
+            err += integrate.quad(derivFunction, lower, upper, limit = 100)[0]
+        errs.append(np.log(err))
+    errSeries = Series(errs, hvals)
+    ax = errSeries.plot()
+    ax.set_title("Mesh Size vs L2 Error of (u_h - u)'")
+    ax.set_ylabel("Log of Squared L2 Error")
+    ax.set_xlabel("Log of Mesh Size")
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+    plt.savefig('ProblemC_hConvergence', bbox_inches='tight')
+    
+numSteps = range(6, 101, 1)
+derivConvergence(numSteps)
