@@ -238,6 +238,48 @@ def p_h(v_h, f):
 
     return ph_f
 
+#Problem c part (b)
+def compResiduals(mesh, f):
+    eta = []
+    maxEta = 0
+    for i in range(mesh.n_s):
+        x0 = mesh.s[i][0]
+        x1 = mesh.s[i][1]
+        h = x1 - x0
+        m = (x0+x1)/2
+        quad = (h/6)*((f(x0))**2+4*(f(m))**2+(f(x1))**2)
+        eta.append(h*np.sqrt(quad))
+    return eta
+
+f = lambda x: np.exp(-50*(x-1/2)**2)
+def refine_grid(tolerance, f, low, high, alpha):
+    x = Mesh([low, high])
+    error = 1
+    while error > tolerance:
+        xNew = x.p.tolist()
+        resids = compResiduals(x, f)
+        error = 0
+        refineBound = alpha*max(resids)
+        for i in range(len(resids)):
+            error += resids[i]**2
+            if resids[i] > refineBound:
+                x0 = x.s[i][0]
+                x1 = x.s[i][1]
+                m = (x0+x1)/2
+                xNew.append(m)
+        x = Mesh(xNew)
+    return x, error
+    
+alpha = .5
+newMesh, error = refine_grid(.001, f, 0, 1, alpha)
+print(newMesh.p, error, len(newMesh.p), 'alpha:', alpha)
+
+alpha = 0
+newMesh, error = refine_grid(.001, f, 0, 1, alpha)
+print(newMesh.p, error, len(newMesh.p), 'alpha:', alpha)
+
+
+
 if __name__ == "__main__":
 
   """ This is the main function, which will run 
@@ -296,8 +338,6 @@ if __name__ == "__main__":
   # print the error
   print("L^2 error using %d points is %.6f"% (v_h.dim, l2_err))
 
-
-
 #B part 1
 def showHconvergence(numSteps):
     hvals = []
@@ -307,27 +347,48 @@ def showHconvergence(numSteps):
         x = np.linspace(0,1,step)
         mesh = Mesh(x)
         v_h  = V_h(mesh)
-        # using analytical solution
-        u = lambda x : np.sin(4*np.pi*x)
-        # building the correct source file
         f = lambda x : (4*np.pi)**2*np.sin(4*np.pi*x)
-        # conductivity is constant
-        sigma = lambda x : 1 + 0*x  
-        u_sol = solve_poisson_dirichelet(v_h, f, sigma)
-        err = lambda x: np.square(u_sol(x) - u(x))
+        ph_f = p_h(v_h, f)
+
+        err = lambda x: np.square(f(x) - ph_f(x))
         # we use an fearly accurate quadrature 
         errs.append(np.log(integrate.quad(err, 0.0,1., limit = 500)[0]))
     errSeries = Series(errs, hvals)
     ax = errSeries.plot()
-    ax.set_title("Mesh Size vs L2 Error")
-    ax.set_ylabel("Log of Squared L2 Error")
+    ax.set_title("Mesh Size vs L2 Error for Projection")
+    ax.set_ylabel("Log of Squared L2 Error of Projection")
     ax.set_xlabel("Log of Mesh Size")
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
     plt.savefig('ProblemB_hGraph.png', bbox_inches='tight')
     
-#numSteps = range(6, 101, 1)
+numSteps = range(6, 101, 1)
 #showHconvergence(numSteps)
+
+#B part 3
+def counterHconvergence(numSteps):
+    hvals = []
+    errs = []
+    for step in numSteps:
+        hvals.append(np.log(1/(step-1)))
+        x = np.linspace(0,1,step)
+        mesh = Mesh(x)
+        v_h  = V_h(mesh)
+        f = lambda x : 2*x
+        ph_f = p_h(v_h, f)
+
+        err = lambda x: np.square(f(x) - ph_f(x))
+        # we use an fearly accurate quadrature 
+        errs.append(np.log(integrate.quad(err, 0.0,1., limit = 500)[0]))
+    errSeries = Series(errs, hvals)
+    ax = errSeries.plot()
+    ax.set_title("Mesh Size vs L2 Error for Projection")
+    ax.set_ylabel("Log of Squared L2 Error of Projection")
+    ax.set_xlabel("Log of Mesh Size")
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+    plt.savefig('ProblemB_hCounter_Graph.png', bbox_inches='tight')
+#counterHconvergence(numSteps)
 
 #B part 2
 def showDoubleDerivative_convergence(kVals):
@@ -341,20 +402,15 @@ def showDoubleDerivative_convergence(kVals):
         x = np.linspace(0,1,step)
         mesh = Mesh(x)
         v_h  = V_h(mesh)
-        # using analytical solution
-        u = lambda x : (np.sin(2*k*x)-x*np.sin(2*k))/(4*k**2)
-        # building the correct source file
         f = lambda x : np.sin(2*k*x)
-        # conductivity is constant
-        sigma = lambda x : 1 + 0*x  
-        u_sol = solve_poisson_dirichelet(v_h, f, sigma)
-        err = lambda x: np.square(u_sol(x) - u(x))
+        ph_f = p_h(v_h, f)
+        err = lambda x: np.square(f(x) - ph_f(x))
         # we use an fearly accurate quadrature 
         errs.append(np.sqrt(integrate.quad(err, 0.0,1., limit = 500)[0]))
     errSeries = Series(errs, doubleDeriv)
     ax = errSeries.plot()
     ax.set_title("L2 Norm of the Second Derivative vs L2 Error")
-    ax.set_ylabel("L2 Error")
+    ax.set_ylabel("L2 Error of Projection")
     ax.set_xlabel("L2 Norm of Second Derivative")
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
