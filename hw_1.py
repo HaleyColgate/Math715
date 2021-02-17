@@ -146,7 +146,7 @@ def source_assembler(v_h, f, sigma, u_dirichlet):
     lsigma = sigma(mL)
 
   # update the source_vector
-    b[0] += u_dirichlet[0] * lsigma / hL
+    b[1] += u_dirichlet[0] * lsigma / hL
 
 
   # extract the interval index for the right boudanry
@@ -161,7 +161,7 @@ def source_assembler(v_h, f, sigma, u_dirichlet):
     rsigma = sigma(hR)
 
   # update the source_vector
-    b[-1] += u_dirichlet[0] * rsigma / hR
+    b[-2] += u_dirichlet[0] * rsigma / hR
 
   # return only the interior nodes
     return b[1:-1]
@@ -308,13 +308,13 @@ if __name__ == "__main__":
   assert np.max(ph_f.xi - ph_f2.xi) < 1.e-6
 
   # using analytical solution
-  u = lambda x : np.sin(4*np.pi*x)
+  u = lambda x : -np.sin(np.pi*x)/(np.pi)**2 + 1
   # building the correct source file
-  f = lambda x : (4*np.pi)**2*np.sin(4*np.pi*x)
+  f = lambda x : np.sin(x)
   # conductivity is constant
   sigma = lambda x : 1 + 0*x  
 
-  u_sol = solve_poisson_dirichelet(v_h, f, sigma)
+  u_sol = solve_poisson_dirichelet(v_h, f, sigma, [1,1])
 
   err = lambda x: np.square(u_sol(x) - u(x))
   # we use an fearly accurate quadrature 
@@ -329,7 +329,7 @@ if __name__ == "__main__":
   mesh = Mesh(x)
   v_h  = V_h(mesh)
 
-  u_sol = solve_poisson_dirichelet(v_h, f, sigma)
+  u_sol = solve_poisson_dirichelet(v_h, f, sigma, [1,1])
 
   err = lambda x: np.square(u_sol(x) - u(x))
   # we use an fearly accurate quadrature 
@@ -433,25 +433,17 @@ def derivConvergence(numSteps):
         mesh = Mesh(x)
         v_h  = V_h(mesh)
         # using analytical solution
-        u = lambda x : np.cos(x)
+        uPrime = lambda x : np.cos(x)
         # building the correct source file
         f = lambda x : np.sin(x)
-        # conductivity is constant
-        S = spsp.csc_matrix(stiffness_matrix(v_h, sigma))[1:-1,1:-1]
-        # we build the source
-        b = source_assembler(v_h, f, sigma, u_dirichlet)
-        # solve for the interior degrees of freedom
-        u_interior = spsolve(S,b)
-        # concatenate the solution to add the boundary 
-        # conditions
-        xi_u = np.concatenate([u_dirichlet[:1], u_interior, u_dirichlet[1:]])
+        u_sol = solve_poisson_dirichelet(v_h, f, sigma)
         err = 0
         for i in range(v_h.mesh.n_s):
             lower = v_h.mesh.s[i][0] 
             upper = v_h.mesh.s[i][1]
-            xiLower = xi_u[i]
-            xiUpper = xi_u[i+1]
-            derivFunction = lambda x : np.square(u(x) + xiLower - xiUpper)
+            h = upper - lower
+            slope = (u_sol(upper) - u_sol(lower))/h
+            derivFunction = lambda x : np.square(uPrime(x) - slope)
             # we use an fearly accurate quadrature 
             err += integrate.quad(derivFunction, lower, upper, limit = 100)[0]
         errs.append(np.log(err))
@@ -464,5 +456,5 @@ def derivConvergence(numSteps):
     ax.spines["right"].set_visible(False)
     plt.savefig('ProblemC_hConvergence', bbox_inches='tight')
     
-numSteps = range(6, 101, 1)
+numSteps = range(6, 10, 1)
 derivConvergence(numSteps)
