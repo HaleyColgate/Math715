@@ -252,9 +252,17 @@ def compResiduals(mesh, f):
     return eta
 
 f = lambda x: np.exp(-50*(x-1/2)**2)
+
 def refine_grid(tolerance, f, low, high, alpha):
+    #fine grid solve:
+    fineMesh = Mesh(np.linspace(low,high,1001))
+    v_hFine = V_h(fineMesh)
+    sigma = lambda x : 1 + 0*x  
+
+    fine_sol = solve_poisson_dirichelet(v_hFine, f, sigma)
+
     x = Mesh([low, high])
-    error = 1
+    error = 2*tolerance
     while error > tolerance:
         xNew = x.p.tolist()
         resids = compResiduals(x, f)
@@ -268,15 +276,20 @@ def refine_grid(tolerance, f, low, high, alpha):
                 m = (x0+x1)/2
                 xNew.append(m)
         x = Mesh(xNew)
+        v_h = V_h(x)
+        u = solve_poisson_dirichelet(v_h, f, sigma, [0,0])
+        errF = lambda x: np.square(fine_sol(x) - u(x))
+        error = np.sqrt(integrate.quad(errF, 0.0,1., limit = 100)[0])
+
     return x, error
     
-#alpha = .5
-#newMesh, error = refine_grid(.001, f, 0, 1, alpha)
-#print(newMesh.p, error, len(newMesh.p), 'alpha:', alpha)
+alpha = .9
+newMesh, error = refine_grid(.001, f, 0, 1, alpha)
+print(newMesh.p, error, len(newMesh.p), 'alpha:', alpha)
 
-#alpha = 0
-#newMesh, error = refine_grid(.001, f, 0, 1, alpha)
-#print(newMesh.p, error, len(newMesh.p), 'alpha:', alpha)
+alpha = 0
+newMesh, error = refine_grid(.001, f, 0, 1, alpha)
+print(newMesh.p, error, len(newMesh.p), 'alpha:', alpha)
 
 
 
